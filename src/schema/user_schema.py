@@ -1,22 +1,30 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
-from datetime import datetime
 
-class UserBase(BaseModel):
+class UserCreate(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+    mobile: str
+    country: str
+    account_no: str
+    is_active: bool = True
+
+class UserOut(BaseModel):
+    user_id: str
     name: str
     email: EmailStr
     mobile: str
     country: str
-    account_no: Optional[str] = None
-    is_active: Optional[str] = "Update your KYC"
-
-class UserCreate(UserBase):
-    password: str
-
-class UserOut(UserBase):
-    user_id: str
-    amount: int
-    created_at: datetime
+    account_no: str
+    is_active: bool
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
