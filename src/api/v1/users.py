@@ -1,18 +1,24 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from schema.user_schema import UserCreate, UserOut, UserLogin, Token
-from services.user_service import create_user, get_user_by_email, get_user_by_id, update_user_status, login
+from services.user_service import create_user, get_user_by_email, login
 from db.database import get_db
+from core.security import oauth2_scheme
+from jose import JWTError, jwt
+from core.security import SECRET_KEY, ALGORITHM
 
 router = APIRouter()
 
-from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
+@router.post("/register", response_model=UserOut)
+def register(user: UserCreate, db: Session = Depends(get_db)):
+    db_user = get_user_by_email(db, user.email)
+    if db_user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+    return create_user(db, user)
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-SECRET_KEY = "your-secret-key"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 10
+@router.post("/login", response_model=Token)
+def login_for_access_token(user_login: UserLogin, db: Session = Depends(get_db)):
+    return login(db, user_login)
 
 async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
@@ -32,34 +38,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
         raise credentials_exception
     return user
 
-
-@router.post("/register", response_model=UserOut)
-def register(user: UserCreate, db: Session = Depends(get_db)):
-    db_user = get_user_by_email(db, user.email)
-    if db_user:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
-    return create_user(db, user)
-
-@router.post("/login", response_model=Token)
-def login_for_access_token(user_login: UserLogin, db: Session = Depends(get_db)):
-    return login(db, user_login)
-
-
-@router.get("/profile",response_model=UserOut)
-def get_profile(current_user =  Depends(get_current_user)):
+@router.get("/profile", response_model=UserOut)
+async def read_users_profile(current_user: UserOut = Depends(get_current_user)):
     return current_user
-
-
-@router.get("/{user_id}", response_model=UserOut)
-def get_user(user_id: str, db: Session = Depends(get_db)):
-    db_user = get_user_by_id(db, user_id)
-    if not db_user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    return db_user
-
-@router.put("/{user_id}/status", response_model=UserOut)
-def change_status(user_id: str, status: str, db: Session = Depends(get_db)):
-    updated_user = update_user_status(db, user_id, status)
-    if not updated_user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    return updated_user

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from db.database import engine
 from models.user_model import Base
-from api.v1.users import router
+from api.v1 import users
 
 app = FastAPI()
 
@@ -9,7 +9,7 @@ app = FastAPI()
 Base.metadata.create_all(bind=engine)
 
 # Include the users router
-app.include_router(router, prefix="/api/v1/users", tags=["users"])
+app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
 
 @app.get("/")
 def read_root():
