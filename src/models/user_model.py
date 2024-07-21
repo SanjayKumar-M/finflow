@@ -1,23 +1,17 @@
-from sqlalchemy import Column, String, Integer, DateTime, func
-from sqlalchemy.orm import declarative_base
-from nanoid import generate
-from datetime import datetime
-
-Base = declarative_base()
-
-def generate_id():
-    return generate()
+from sqlalchemy import Column, String, Boolean
+from db.database import Base
 
 class User(Base):
-    __tablename__ = 'users'
+    __tablename__ = "users"
 
-    user_id = Column(String(21), primary_key=True, default=generate_id)
-    name = Column(String, nullable=False)
-    email = Column(String, unique=True, index=True, nullable=False)
-    mobile = Column(String, unique=True, nullable=False)
-    password = Column(String, nullable=False)
-    account_no = Column(String, nullable=True)
-    country = Column(String, nullable=False)
-    is_active = Column(String, default="Update your KYC")
-    amount = Column(Integer, server_default='100000')
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    user_id = Column(String, primary_key=True, index=True)
+    name = Column(String)
+    email = Column(String, unique=True, index=True)
+    mobile = Column(String)
+    password = Column(String)
+    country = Column(String)
+    account_no = Column(String)
+    is_active = Column(String)
+    otp = Column(String, nullable=True)
+    pin = Column(String, nullable=True)
+    upi_id = Column(String, nullable=True)

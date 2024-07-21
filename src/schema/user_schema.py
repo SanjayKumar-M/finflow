@@ -8,7 +8,6 @@ class UserCreate(BaseModel):
     mobile: str
     country: str
     account_no: str
-    kyc_status: str = "KYC not updated"
 
     @validator('password')
     def password_complexity(cls, v):
@@ -29,7 +28,8 @@ class UserOut(BaseModel):
     mobile: str
     country: str
     account_no: str
-    kyc_status: str
+    is_active: str
+    upi_id: str | None
 
     class Config:
         from_attributes = True
@@ -41,3 +41,15 @@ class UserLogin(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+class OTPVerify(BaseModel):
+    otp: str
+
+class PinSet(BaseModel):
+    pin: str
+
+    @validator('pin')
+    def pin_format(cls, v):
+        if not re.match(r'^\d{4}$', v):
+            raise ValueError('PIN must be a 4-digit number')
+        return v

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from schema.user_schema import UserCreate, UserOut, UserLogin, Token
-from services.user_service import create_user, get_user_by_email, login
+from schema.user_schema import UserCreate, UserOut, UserLogin, Token, OTPVerify, PinSet
+from services.user_service import create_user, get_user_by_email, login, verify_otp, set_pin
 from db.database import get_db
 from core.security import oauth2_scheme
 from jose import JWTError, jwt
@@ -41,3 +41,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
 @router.get("/profile", response_model=UserOut)
 async def read_users_profile(current_user: UserOut = Depends(get_current_user)):
     return current_user
+
+@router.post("/verify")
+async def verify_user_otp(otp: OTPVerify, current_user: UserOut = Depends(get_current_user), db: Session = Depends(get_db)):
+    return verify_otp(db, current_user.email, otp)
+
+@router.post("/set_pin")
+async def set_user_pin(pin: PinSet, current_user: UserOut = Depends(get_current_user), db: Session = Depends(get_db)):
+    return set_pin(db, current_user.email, pin)
